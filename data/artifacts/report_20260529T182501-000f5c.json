@@ -1,0 +1,38 @@
+{
+  "run_id": "20260529T182501-000f5c",
+  "generated_at": "2026-05-29T18:26:05.319022+00:00",
+  "use_synthetic": false,
+  "horizon": 12,
+  "data_provenance": {
+    "hes": "synthetic (record-level HES is DARS-gated)",
+    "diagnostic_imaging": "synthetic (per-release CSV link not wired)",
+    "rtt_waiting": "live (NHS England national series, top-down trust split)",
+    "monthly_activity": "synthetic (per-release workbook headers not wired)",
+    "ons_demographics": "synthetic (full-population CSV is 126MB; not wired)",
+    "supply_chain": "synthetic (no stable open API)"
+  },
+  "backtest_metrics": {
+    "lgbm": {
+      "mae": 15.189142737441706,
+      "rmse": 20.125871231094113,
+      "mape": 7.00477911906256
+    },
+    "sarima": {
+      "mae": 41.141810983978736,
+      "rmse": 49.87039583751259,
+      "mape": 2.4145290565958346
+    },
+    "lstm": {
+      "mae": 15.53287750983255,
+      "rmse": 20.273182614293876,
+      "mape": 7.478931160710321
+    }
+  },
+  "n_procedure_forecast_rows": 2496,
+  "n_equipment_forecast_rows": 2880,
+  "scenarios": [
+    "baseline",
+    "backlog_clear",
+    "capacity_cap"
+  ]
+}

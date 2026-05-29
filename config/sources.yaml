@@ -1,0 +1,79 @@
+# Data source registry for the NHS equipment forecasting pipeline.
+#
+# Each source declares:
+#   access      : api | bulk | scrape   (how data is obtained)
+#   url          : landing page or API root (documented, not always machine-readable)
+#   cadence      : how often the publisher releases new data
+#   format       : on-disk format of the published data
+#   loader       : python loader function (module:function) used by the ingestion layer
+#   notes        : real-world caveats (auth, schema drift, licensing)
+#
+# NHS Open Data is published under the Open Government Licence (OGL) v3.0.
+# Where a real machine endpoint is unstable / requires registration, the loader
+# falls back to the synthetic generator so the full pipeline remains runnable.
+
+hes:
+  name: "Hospital Episode Statistics (Admitted Patient Care)"
+  access: bulk
+  url: "https://digital.nhs.uk/data-and-information/data-tools-and-services/data-services/hospital-episode-statistics"
+  cadence: monthly        # HES is published monthly (provisional) + annual final
+  format: csv             # large pipe/comma separated extracts
+  loader: "nhs_forecast.ingestion.hes:load"
+  grain: "trust x opcs4_chapter x month"
+  notes: >
+    Full record-level HES requires a Data Access Request Service (DARS) agreement.
+    Aggregated, openly-published activity tables are used here. Procedure codes use OPCS-4.
+
+diagnostic_imaging:
+  name: "Diagnostic Imaging Dataset (DID)"
+  access: bulk
+  url: "https://www.england.nhs.uk/statistics/statistical-work-areas/diagnostic-imaging-dataset/"
+  cadence: monthly
+  format: csv
+  loader: "nhs_forecast.ingestion.diagnostic_imaging:load"
+  grain: "trust x modality x month"
+  notes: >
+    Monthly CSV/XLS by imaging modality (CT, MRI, Ultrasound, Plain Radiography, etc).
+    Directly relevant for imaging equipment (scanners) demand.
+
+monthly_activity:
+  name: "NHS Monthly Activity Statistics (A&E, electives, outpatients)"
+  access: bulk
+  url: "https://www.england.nhs.uk/statistics/statistical-work-areas/combined-performance-summary/"
+  cadence: monthly
+  format: xlsx
+  loader: "nhs_forecast.ingestion.monthly_activity:load"
+  grain: "trust x activity_type x month"
+  notes: "Excel workbooks with multi-row headers; schema drifts between releases."
+
+rtt_waiting:
+  name: "Referral To Treatment (RTT) Waiting Times"
+  access: bulk
+  url: "https://www.england.nhs.uk/statistics/statistical-work-areas/rtt-waiting-times/"
+  cadence: monthly
+  format: csv
+  loader: "nhs_forecast.ingestion.rtt_waiting:load"
+  grain: "trust x treatment_function x month"
+  notes: "Waiting list size + % within 18 weeks. Key demand-pressure signal."
+
+supply_chain:
+  name: "NHS Supply Chain / procurement spend"
+  access: scrape          # no clean open API; spend data via gov procurement portals
+  url: "https://www.supplychain.nhs.uk/"
+  cadence: quarterly
+  format: csv
+  loader: "nhs_forecast.ingestion.supply_chain:load"
+  grain: "category x quarter"
+  notes: >
+    No stable open API. Contracts Finder / NHS Spend Comparison Service give partial
+    procurement signals. Used as an optional ground-truth for equipment consumption.
+
+ons_demographics:
+  name: "ONS mid-year population estimates by age band and region"
+  access: api
+  url: "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates"
+  cadence: annual
+  format: csv
+  loader: "nhs_forecast.ingestion.ons_demographics:load"
+  grain: "region x age_band x year"
+  notes: "ONS Beta API + bulk CSV. Used for demographic demand drivers."

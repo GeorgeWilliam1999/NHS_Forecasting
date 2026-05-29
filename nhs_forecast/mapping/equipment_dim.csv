@@ -1,0 +1,8 @@
+equipment_type,category,unit_cost_gbp,reusable
+ortho_implant,implant,950,false
+endoscope,surgical,1800,true
+cardiac_device,device,4200,false
+imaging_consumable,consumable,60,false
+surgical_kit,consumable,120,false
+ct_scanner_hours,imaging,0,true
+mri_scanner_hours,imaging,0,true

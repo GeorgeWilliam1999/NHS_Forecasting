@@ -1,0 +1,30 @@
+services:
+  # REST API serving the latest forecasts.
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data        # share warehouse + artifacts with other services
+    environment:
+      NHSFC_USE_SYNTHETIC: "true"
+
+  # Streamlit dashboard.
+  dashboard:
+    build: .
+    command: streamlit run nhs_forecast/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - api
+
+  # One-shot monthly pipeline run (invoke via `docker compose run pipeline`,
+  # or schedule with the host cron / Prefect / Airflow).
+  pipeline:
+    build: .
+    command: python -m nhs_forecast.pipeline.cli run --synthetic
+    volumes:
+      - ./data:/app/data
+    profiles: ["batch"]

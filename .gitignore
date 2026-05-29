@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Regenerable data produced by the pipeline at runtime.
+data/raw/
+data/lake/
+data/warehouse/
+data/raw_cache/
+data/logs/
+*.duckdb
+
+# Keep the forecast artifacts so the dashboard renders on first load,
+# but ignore large/regenerable trained model binaries.
+data/artifacts/*.pkl
+data/artifacts/*.pt
+data/artifacts/*.joblib
+
+# Env
+.env
