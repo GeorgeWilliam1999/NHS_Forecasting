@@ -6,14 +6,40 @@ e.g. ``NHSFC_USE_SYNTHETIC=false``.
 """
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
 import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Project root = two levels up from this file (nhs_forecast/config.py -> repo root).
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+def _resolve_project_root() -> Path:
+    """Locate a writable project root.
+
+    Order of preference:
+    1. ``NHSFC_PROJECT_ROOT`` env var, if set.
+    2. The current working directory, when it looks like the project checkout
+       (contains ``nhs_forecast/`` or ``data/``). This is the case on
+       Streamlit Community Cloud, where the app runs from the cloned repo while
+       the package itself is pip-installed into a read-only ``site-packages``.
+    3. Two levels up from this file (the repo root for an editable / source
+       checkout).
+    """
+    env_root = os.environ.get("NHSFC_PROJECT_ROOT")
+    if env_root:
+        return Path(env_root).resolve()
+
+    cwd = Path.cwd()
+    if (cwd / "nhs_forecast").is_dir() or (cwd / "data").is_dir():
+        return cwd
+
+    return Path(__file__).resolve().parents[1]
+
+
+# Project root: prefer the working-directory checkout so paths stay writable
+# even when the package is installed into a read-only site-packages location.
+PROJECT_ROOT = _resolve_project_root()
 
 
 class Settings(BaseSettings):
@@ -46,7 +72,13 @@ class Settings(BaseSettings):
 
     def ensure_dirs(self) -> None:
         for p in (self.raw_dir, self.lake_dir, self.warehouse_path.parent, self.artifacts_dir):
-            p.mkdir(parents=True, exist_ok=True)
+            try:
+                p.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                # Read-only deployment (e.g. package installed in site-packages):
+                # the dashboard can still read committed artifacts. Writing
+                # (running the pipeline) will surface a clearer error later.
+                pass
 
     def sources(self) -> dict:
         with open(self.config_dir / "sources.yaml", "r", encoding="utf-8") as fh:
