@@ -70,6 +70,19 @@ class Settings(BaseSettings):
     request_timeout: int = 60
     max_retries: int = 4
 
+    # --- telemetry / pay-per-use underwriting layer -----------------------
+    # Device-session telemetry simulator + underwriting engine. Self-contained:
+    # the aggregate demand pipeline above is unaffected by these knobs.
+    telemetry_n_devices: int = 16
+    telemetry_days: int = 540          # ~18 months of daily device telemetry
+    telemetry_seed: int = 7
+    telemetry_horizon_days: int = 28   # short-term utilisation forecast horizon
+    underwriting_low_q: float = 0.05   # downside quantile (Utilisation-at-Risk)
+    underwriting_high_q: float = 0.95
+    risk_alpha: float = 0.05           # VaR / CVaR tail probability
+    risk_n_sims: int = 4000            # Monte-Carlo portfolio draws
+    min_billable_seconds: float = 180.0  # contract rule: active time to bill a session
+
     def ensure_dirs(self) -> None:
         for p in (self.raw_dir, self.lake_dir, self.warehouse_path.parent, self.artifacts_dir):
             try:

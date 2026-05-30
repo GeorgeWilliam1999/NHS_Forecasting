@@ -68,6 +68,49 @@ def report():
     _print_report(json.loads(path.read_text(encoding="utf-8")))
 
 
+@app.command()
+def underwrite(devices: int = 0, days: int = 0):
+    """Run the pay-per-use telemetry → utilisation underwriting pipeline.
+
+    Generates device-session telemetry, fits the censored Negative-Binomial
+    utilisation model, forecasts the horizon and produces per-device pricing +
+    portfolio risk (VaR / CVaR / effective diversification).
+    """
+    from nhs_forecast.telemetry import pipeline as tpipe
+
+    settings = get_settings()
+    if devices:
+        settings.telemetry_n_devices = devices
+    if days:
+        settings.telemetry_days = days
+    report = tpipe.run(settings)
+    _print_underwriting(report)
+
+
+def _print_underwriting(report: dict) -> None:
+    p = report.get("portfolio_risk", {})
+    b = report.get("backtest", {})
+    console.print(f"[bold]telemetry run[/]: {report['run_id']}")
+    console.print(f"devices: {report['n_devices']} | sessions: {report['n_sessions']:,} | "
+                  f"device-days: {report['n_device_days']:,}")
+    console.print(f"model: [cyan]{b.get('model_kind', 'n/a')}[/] "
+                  f"(alpha={b.get('alpha', 'n/a')}) | "
+                  f"pinball P50={b.get('pinball_p50', 'n/a')} "
+                  f"vs naive {b.get('pinball_p50_naive', 'n/a')} | "
+                  f"90% coverage={b.get('coverage_90', 'n/a')}")
+    table = Table(title="Portfolio risk")
+    table.add_column("metric")
+    table.add_column("value", justify="right")
+    for k in ("expected_revenue_gbp", "fixed_cost_gbp", "expected_margin_gbp",
+              "var_loss_gbp", "cvar_loss_gbp", "prob_book_loss",
+              "effective_n_independent", "diversification_ratio",
+              "n_devices_negative_margin"):
+        if k in p:
+            v = p[k]
+            table.add_row(k, f"{v:,.2f}" if isinstance(v, (int, float)) else str(v))
+    console.print(table)
+
+
 def _print_metrics(metrics: dict):
     table = Table(title="Backtest model comparison")
     table.add_column("model")

@@ -110,3 +110,89 @@ CREATE TABLE IF NOT EXISTS forecast_equipment (
     demand_lower    DOUBLE,
     demand_upper    DOUBLE
 );
+
+-- ---------- pay-per-use telemetry / underwriting ----------
+-- Device-session is the underwriting unit of observation (see telemetry module).
+-- These tables are additive; the aggregate demand pipeline does not depend on them.
+CREATE TABLE IF NOT EXISTS dim_device (
+    device_id            VARCHAR PRIMARY KEY,
+    device_type          VARCHAR,
+    site_id              VARCHAR,
+    region               VARCHAR,
+    specialty            VARCHAR,
+    install_date         DATE,
+    contract_id          VARCHAR,
+    price_per_session_gbp DOUBLE,
+    monthly_fixed_cost_gbp DOUBLE,   -- capital charge + maintenance the platform carries
+    min_monthly_floor_gbp DOUBLE,    -- contractual revenue floor (left-censoring)
+    cap_sessions_day     INTEGER     -- contractual / physical daily cap (right-censoring)
+);
+
+CREATE TABLE IF NOT EXISTS dim_operator (
+    operator_hash   VARCHAR PRIMARY KEY,
+    site_id         VARCHAR,
+    specialty       VARCHAR,
+    role            VARCHAR
+);
+
+-- Raw, append-only telemetry event log (immutable source of truth).
+CREATE TABLE IF NOT EXISTS telemetry_event (
+    event_id        VARCHAR,
+    device_id       VARCHAR,
+    site_id         VARCHAR,
+    operator_hash   VARCHAR,
+    event_type      VARCHAR,   -- power_on|power_off|active_start|active_end|error|login
+    ts_device       TIMESTAMP,
+    seq_no          BIGINT,
+    active_seconds  DOUBLE,
+    n_errors        INTEGER,
+    procedure_code  VARCHAR,
+    ingest_quality  VARCHAR
+);
+
+-- Derived sessions (rebuildable from telemetry_event).
+CREATE TABLE IF NOT EXISTS fact_device_session (
+    session_id      VARCHAR,
+    device_id       VARCHAR,
+    site_id         VARCHAR,
+    operator_hash   VARCHAR,
+    procedure_code  VARCHAR,
+    t_start         TIMESTAMP,
+    t_end           TIMESTAMP,
+    active_seconds  DOUBLE,
+    n_errors        INTEGER,
+    billable        BOOLEAN,
+    billed_amount_gbp DOUBLE
+);
+
+-- Modelling grain: one row per device per day.
+CREATE TABLE IF NOT EXISTS fact_device_day (
+    device_id       VARCHAR,
+    date            DATE,
+    n_sessions      INTEGER,
+    n_billable      INTEGER,
+    active_seconds  DOUBLE,
+    exposure_hours  DOUBLE,    -- powered-on hours (offset; 0 => downtime/censored)
+    n_errors        INTEGER,
+    n_operators     INTEGER,
+    billed_gbp      DOUBLE
+);
+
+-- Per-device underwriting output.
+CREATE TABLE IF NOT EXISTS underwriting_device (
+    run_id          VARCHAR,
+    device_id       VARCHAR,
+    site_id         VARCHAR,
+    region          VARCHAR,
+    specialty       VARCHAR,
+    expected_sessions DOUBLE,
+    expected_revenue_gbp DOUBLE,
+    cv              DOUBLE,     -- coefficient of variation of horizon revenue
+    beta_book       DOUBLE,     -- covariance with the rest of the book
+    suggested_price_gbp DOUBLE,
+    current_price_gbp DOUBLE,
+    uar_p5_sessions DOUBLE,     -- Utilisation-at-Risk (downside)
+    floor_breach_prob DOUBLE,
+    op_herfindahl   DOUBLE,     -- operator concentration (key-person risk)
+    expected_margin_gbp DOUBLE
+);
