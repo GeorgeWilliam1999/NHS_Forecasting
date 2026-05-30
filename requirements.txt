@@ -30,4 +30,7 @@ fastapi>=0.110
 uvicorn>=0.27
 
 # Install the local package itself (provides the `nhs_forecast` module).
--e .
+# NOTE: a regular (non-editable) install — Streamlit Community Cloud's build
+# sandbox cannot create editable (`-e .`) links and fails with
+# "Error installing requirements".
+.
