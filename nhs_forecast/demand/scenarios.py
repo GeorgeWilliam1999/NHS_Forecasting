@@ -41,7 +41,6 @@ def backlog_clear(
     latest = (waiting.sort_values("date").groupby(["trust_code", "treatment_function"])
                      .tail(1))
     total_backlog = float(latest["waiting_list_size"].sum())
-    horizon_months = out["date"].nunique()
     monthly_extra_total = (total_backlog * clear_frac) / max(clear_months, 1)
 
     # distribute the extra activity proportionally to each row's baseline yhat

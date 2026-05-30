@@ -12,6 +12,7 @@ a transparent assumption that can be replaced by driver-specific forecasts.
 """
 from __future__ import annotations
 
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
@@ -20,8 +21,6 @@ from nhs_forecast.logging_setup import get_logger
 from nhs_forecast.models.base import ForecastResult, future_index
 
 log = get_logger("models.lgbm")
-
-import lightgbm as lgb
 
 CATEGORICAL = ["trust_code", "region", "opcs_chapter", "procedure_code"]
 NUMERIC = [c for c in FEATURE_COLUMNS if c not in CATEGORICAL]

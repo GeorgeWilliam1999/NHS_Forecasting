@@ -1,21 +1,21 @@
 {
-  "run_id": "20260530T103608-390ebd",
-  "generated_at": "2026-05-30T10:39:36.113276+00:00",
-  "use_synthetic": false,
+  "run_id": "20260529T184323-79ee93",
+  "generated_at": "2026-05-29T18:44:37.009465+00:00",
+  "use_synthetic": true,
   "horizon": 12,
   "data_provenance": {
     "hes": "synthetic (record-level HES is DARS-gated)",
     "diagnostic_imaging": "synthetic (per-release CSV link not wired)",
-    "rtt_waiting": "live (NHS England national series, top-down trust split)",
+    "rtt_waiting": "synthetic",
     "monthly_activity": "synthetic (per-release workbook headers not wired)",
     "ons_demographics": "synthetic (full-population CSV is 126MB; not wired)",
     "supply_chain": "synthetic (no stable open API)"
   },
   "backtest_metrics": {
     "lgbm": {
-      "mae": 15.189142737441706,
-      "rmse": 20.125871231094113,
-      "mape": 7.00477911906256
+      "mae": 15.409823569631689,
+      "rmse": 20.564724404618552,
+      "mape": 7.125499587480845
     },
     "sarima": {
       "mae": 41.141810983978736,

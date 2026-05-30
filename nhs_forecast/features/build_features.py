@@ -117,7 +117,7 @@ def build_feature_table(settings: Settings) -> pd.DataFrame:
 FEATURE_COLUMNS = [
     "month", "quarter", "sin_month", "cos_month", "time_idx", "proc_mix_share",
     "wl_size_lag1", "wl_pct_18wk_lag1", "pop_65plus_share",
-    *[f"n_procedures_lag{l}" for l in LAGS],
+    *[f"n_procedures_lag{lag}" for lag in LAGS],
     *[f"n_procedures_rollmean{w}" for w in ROLL_WINDOWS],
     *[f"n_procedures_rollstd{w}" for w in ROLL_WINDOWS],
     "trust_code", "region", "opcs_chapter", "procedure_code",

@@ -26,7 +26,7 @@ import pandas as pd
 from nhs_forecast.config import Settings, get_settings
 from nhs_forecast.demand import scenarios
 from nhs_forecast.demand.derive import derive_equipment_demand
-from nhs_forecast.features.build_features import FEATURE_COLUMNS, TARGET, build_feature_table
+from nhs_forecast.features.build_features import TARGET, build_feature_table
 from nhs_forecast.ingestion import (
     base, diagnostic_imaging, hes, monthly_activity, ons_demographics, rtt_waiting, supply_chain,
 )

@@ -10,7 +10,6 @@ from functools import lru_cache
 from pathlib import Path
 
 import yaml
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Project root = two levels up from this file (nhs_forecast/config.py -> repo root).
